@@ -1,22 +1,33 @@
 {
   "name": "log-data",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.1.1",
-      "onFail": "download"
+  "description": "An environment-aware logging library for client and server (using Pino on server and Console on client).",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
-  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint src/**/*.ts",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "log",
+    "logging",
+    "pino",
+    "console"
+  ],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "pino": "^10.3.1"
   },
@@ -27,5 +38,6 @@
     "eslint": "^10.4.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
-  }
+  },
+  "type": "module"
 }
