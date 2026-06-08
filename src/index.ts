@@ -70,10 +70,6 @@ export const logData: LogData = ({
 		return;
 	}
 
-	if (clearConsole) {
-		console.clear();
-	}
-
 	const appName = process.env.APP_NAME || "Unknown App";
 	const separator =
 		"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
@@ -108,6 +104,7 @@ export const logData: LogData = ({
 			appName,
 			separator,
 			logLabel,
+			clearConsole,
 		});
 	}
 };

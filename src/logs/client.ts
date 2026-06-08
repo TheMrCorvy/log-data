@@ -22,8 +22,13 @@ const logsForClient: LogsForClient = ({
 	logIsAvailable,
 	appName,
 	separator,
+	clearConsole,
 }) => {
 	let dataString: unknown;
+
+	if (clearConsole) {
+		console.clear();
+	}
 
 	logSpace(addSpaceBefore);
 
