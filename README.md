@@ -1,150 +1,108 @@
 # log-data
 
-A lightweight, environment-aware, zero-dependency-wrapped logging library for TypeScript and JavaScript applications. It automatically routes server logs to **Pino** (for high-performance JSON logging) and client logs to standard **Console** methods.
+A simple, environment-aware logging library for client and server.
 
-## Features
+## Configuration (Environment Variables)
 
-- **Environment-Aware**: Automatically detects whether it is running on the client or the server (by checking if `window` is defined).
-- **Server Logging**: Powered by [Pino](https://github.com/pinojs/pino) to produce highly performant, structured JSON logs.
-- **Client Logging**: Uses standard browser `console` methods (`log`, `warn`, `error`, `info`) with optional formatting.
-- **Layer-Based Filtering**: Easily toggle entire sections of logs via the `LAYERS_AVAILABLE` environment variable.
-- **Feature Flags**: Fully supports runtime feature flags for toggling logs globally or selectively.
-- **Customizable Autocomplete**: Extendable layers utilizing TypeScript declaration merging to preserve IDE autocompletions.
+Configure these variables in your project's `.env` file:
 
----
-
-## Installation
-
-Install the package via `pnpm`:
-
-```bash
-pnpm add log-data
-```
-
-Or using `npm` or `yarn`:
-
-```bash
-npm install log-data
-# or
-yarn add log-data
-```
-
----
-
-## Configuration & Environment Variables
-
-Configure your environment variables inside your `.env` file:
-
+### 1. Available Layers
+Define active layers for logging using `LAYERS_AVAILABLE` as a JSON array string:
 ```env
-# The name of your application
-APP_NAME="My Premium App"
+LAYERS_AVAILABLE='["auth", "database", "api"]'
+```
 
-# Enables logging across ALL layers if set to "true" or "1"
-CONSOLE_LOG_ALL_LAYERS="true"
+### 2. Feature Flags
+Define feature flags as a JSON array of objects with `feature` and `enabled` properties:
+```env
+FEATURE_FLAGS='[{"feature": "CONSOLE_LOG_ALL_LAYERS", "enabled": false}, {"feature": "CONSOLE_LOG_LAYER_SPECIFIC", "enabled": true}]'
+```
+*Note: Default feature flag names are `CONSOLE_LOG_ALL_LAYERS` and `CONSOLE_LOG_LAYER_SPECIFIC`.*
 
-# Enables logging for specific layers defined in LAYERS_AVAILABLE if set to "true" or "1"
-CONSOLE_LOG_LAYER_SPECIFIC="true"
+### 3. Logs Path
+Set the output directory for server-side log files. If not defined, logs default to `stdout`:
+```env
+LOGS_PATH="./logs"
+```
+Logs will be saved under this path as `<APP_NAME>.log` (using the `APP_NAME` environment variable).
 
-# JSON array of layers that should be logged (when CONSOLE_LOG_LAYER_SPECIFIC is active)
-LAYERS_AVAILABLE='["strapi_service", "auth_login", "my_custom_layer"]'
+---
+
+## Usage & API
+
+### 1. `logData`
+Import and call `logData` to log payloads. It routes to Pino on the server and `console` on the client:
+
+```typescript
+import { logData } from "log-data";
+
+logData({
+  title: "User Signup",
+  data: { userId: 123 },
+  type: "info", // "log" | "warn" | "error" | "info"
+  layer: "auth", // Suggested by TS autocomplete if declared
+  timeStamp: true,
+  addSeparatorBefore: true
+});
+```
+
+### 2. `isFeatureFlagEnabled`
+Check if a specific feature flag is active by calling `isFeatureFlagEnabled` with `FeatureNames` (or a custom flag):
+
+```typescript
+import { isFeatureFlagEnabled, FeatureNames } from "log-data";
+
+if (isFeatureFlagEnabled(FeatureNames.CONSOLE_LOG_ALL_LAYERS)) {
+  logData({
+    title: "Feature Flag Active",
+    data: { flag: FeatureNames.CONSOLE_LOG_ALL_LAYERS },
+    type: "log"
+  });
+}
 ```
 
 ---
 
-## How to Configure Autocomplete for Custom Layers
+## TypeScript Setup
 
-To extend the autocomplete options for the `layer` parameter in your specific projects, you can use TypeScript's declaration merging.
-
-Simply create a type declaration file (e.g., `src/types/log-data.d.ts` or `global.d.ts`) in your consumer project:
+### 1. Declaring Custom Layers (Autocomplete in `logData`)
+To enable type checking and autocomplete suggestions for custom layers when calling `logData`, create a type declaration file (e.g., `src/types/log-data.d.ts` or `global.d.ts`) in your consumer project:
 
 ```typescript
 import "log-data";
 
 declare module "log-data" {
-	export interface CustomLayers {
-		// Add your project-specific layers here as keys
-		my_custom_layer: true;
-		db_queries: true;
-		payment_gateway: true;
-	}
+  // Extend LayersAvailable interface using declaration merging
+  export interface LayersAvailable {
+    auth: "auth";
+    database: "database";
+    api: "api";
+  }
 }
 ```
 
-Once declared, your IDE will automatically suggest your custom layers (like `"my_custom_layer"`, `"db_queries"`, and `"payment_gateway"`) alongside the default ones when calling `logData`.
-
----
-
-## Usage
+### 2. Declaring Custom Feature Flags (Autocomplete & Type Safety)
+To declare custom feature flags and extend the library's `FeatureNames`, create a constant named `FeatureFlagsAvailable` that spreads the base `FeatureNames` object and adds your custom options:
 
 ```typescript
-import { logData } from "log-data";
+import { FeatureNames } from "log-data";
 
-// 1. Simple logging with a title and payload
-logData({
-	title: "User logged in",
-	data: { userId: "123", email: "user@example.com" },
-	type: "info",
-	layer: "auth_login", // Provides autocomplete suggestions!
-});
+export const FeatureFlagsAvailable = {
+  ...FeatureNames,
+  MY_CUSTOM_FLAG: "MY_CUSTOM_FLAG",
+} as const;
 
-// 2. Error logging with separators and spaces
-logData({
-	title: "Strapi fetch failed",
-	data: { statusCode: 500, error: "Internal Server Error" },
-	type: "error",
-	layer: "strapi_service",
-	addSeparatorBefore: true,
-	addSeparatorAfter: true,
-	addSpaceBefore: true,
-	addSpaceAfter: true,
-});
-
-// 3. Simple log with timestamp
-logData({
-	title: "Queue job started",
-	type: "log",
-	layer: "queue_jobs",
-	timeStamp: true,
-});
+export type FeatureFlagsAvailable = typeof FeatureFlagsAvailable[keyof typeof FeatureFlagsAvailable];
 ```
 
----
+By typing `FeatureFlagsAvailable.`, your IDE will autocomplete both your custom options and the default ones (e.g. `CONSOLE_LOG_ALL_LAYERS`).
 
-## Output Behavior
+You can then pass the flag directly to `isFeatureFlagEnabled`:
 
-### Client-side (Browser)
+```typescript
+import { isFeatureFlagEnabled } from "log-data";
 
-Logs look like standard styled messages:
-
-```text
---------------------------------------------------------------------------------------------
-User logged in: {"app":"My Premium App","payload":{"userId":"123","email":"user@example.com"}}
---------------------------------------------------------------------------------------------
-```
-
-### Server-side (Node.js)
-
-Logs look like structured JSON records produced by Pino:
-
-```json
-{
-	"level": 30,
-	"time": 1623120000000,
-	"pid": 12345,
-	"hostname": "server-1",
-	"app": "My Premium App",
-	"payload": { "userId": "123", "email": "user@example.com" },
-	"msg": "User logged in: "
+if (isFeatureFlagEnabled(FeatureFlagsAvailable.MY_CUSTOM_FLAG)) {
+  // Runs if MY_CUSTOM_FLAG is enabled in process.env.FEATURE_FLAGS
 }
 ```
-
-## Developer Scripts
-
-Within the `log-data` library:
-
-- **Build**: `pnpm run build`
-- **Lint**: `pnpm run lint`
-
-## License
-
-[ISC](LICENSE)
