@@ -19,7 +19,8 @@
 		"build": "tsup",
 		"lint": "eslint src/**/*.ts",
 		"format": "prettier --write .",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"release": "node release.js"
 	},
 	"keywords": [
 		"log",
