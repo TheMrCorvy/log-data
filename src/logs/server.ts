@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { LogDataParams } from "../index.js";
 import { printTimeStamp } from "../timestamp.js";
+import { getEnv } from "../env.js";
 
 interface LogsForServerParams extends LogDataParams {
 	appName: string;
@@ -16,7 +17,7 @@ type LogsForServer = (params: LogsForServerParams) => void;
 const loggerCache = new Map<string, pino.Logger>();
 
 const getLogger = (appName: string): pino.Logger => {
-	const logsDir = process.env.LOGS_PATH;
+	const logsDir = getEnv("LOGS_PATH");
 
 	if (!logsDir) {
 		let defaultLogger = loggerCache.get("stdout");

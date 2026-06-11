@@ -1,3 +1,5 @@
+import { getEnv } from "./env.js";
+
 export const FeatureNames = {
 	CONSOLE_LOG_ALL_LAYERS: "CONSOLE_LOG_ALL_LAYERS",
 	CONSOLE_LOG_LAYER_SPECIFIC: "CONSOLE_LOG_LAYER_SPECIFIC",
@@ -11,7 +13,7 @@ export interface FeatureFlag {
 }
 
 const getFeatureFlags = (): FeatureFlag[] | null => {
-	const featureFlagsString = process.env.FEATURE_FLAGS;
+	const featureFlagsString = getEnv("FEATURE_FLAGS");
 
 	if (!featureFlagsString) {
 		return null;
