@@ -1,4 +1,6 @@
 import pino from "pino";
+import path from "path";
+import fs from "fs";
 import { LogDataParams } from "../index.js";
 import { printTimeStamp } from "../timestamp.js";
 
@@ -11,7 +13,37 @@ interface LogsForServerParams extends LogDataParams {
 
 type LogsForServer = (params: LogsForServerParams) => void;
 
-const pinoLogger = pino();
+const loggerCache = new Map<string, pino.Logger>();
+
+const getLogger = (appName: string): pino.Logger => {
+	const logsDir = process.env.LOGS_PATH;
+
+	if (!logsDir) {
+		let defaultLogger = loggerCache.get("stdout");
+
+		if (!defaultLogger) {
+			defaultLogger = pino();
+			loggerCache.set("stdout", defaultLogger);
+		}
+		return defaultLogger;
+	}
+
+	const resolvedDir = path.resolve(logsDir);
+	const logFilePath = path.join(resolvedDir, `${appName}.log`);
+
+	let logger = loggerCache.get(logFilePath);
+
+	if (!logger) {
+		if (!fs.existsSync(resolvedDir)) {
+			fs.mkdirSync(resolvedDir, { recursive: true });
+		}
+
+		logger = pino(pino.destination(logFilePath));
+		loggerCache.set(logFilePath, logger);
+	}
+
+	return logger;
+};
 
 const logsForServer: LogsForServer = ({
 	data,
@@ -25,11 +57,13 @@ const logsForServer: LogsForServer = ({
 	separator,
 	logLabel,
 }) => {
-	logSpace(addSpaceBefore);
+	const pinoLogger = getLogger(appName);
+
+	logSpace(pinoLogger, addSpaceBefore);
 
 	if (addSeparatorBefore) {
 		pinoLogger.info(separator);
-		logSpace(true);
+		logSpace(pinoLogger, true);
 	}
 
 	const payload = data
@@ -47,7 +81,6 @@ const logsForServer: LogsForServer = ({
 
 		case "info":
 			pinoLogger.info(payload, logLabel);
-
 			break;
 
 		default:
@@ -56,21 +89,21 @@ const logsForServer: LogsForServer = ({
 	}
 
 	if (timeStamp) {
-		logSpace(addSpaceAfter);
+		logSpace(pinoLogger, addSpaceAfter);
 		pinoLogger.info(printTimeStamp());
-		logSpace(addSpaceAfter);
+		logSpace(pinoLogger, addSpaceAfter);
 	}
 
 	if (addSeparatorAfter) {
 		pinoLogger.info(separator);
 	}
 
-	logSpace(addSpaceAfter);
+	logSpace(pinoLogger, addSpaceAfter);
 };
 
-const logSpace = (booleanFlag: boolean) => {
+const logSpace = (logger: pino.Logger, booleanFlag: boolean) => {
 	if (booleanFlag) {
-		pinoLogger.info(" ");
+		logger.info(" ");
 	}
 };
 
