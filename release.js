@@ -15,7 +15,7 @@ function runCommand(command) {
 // Helper to run commands and capture stdout
 function captureCommand(command) {
 	try {
-		return execSync(command, { encoding: "utf8", shell: true }).trim();
+		return execSync(command, { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8", shell: true }).trim();
 	} catch (error) {
 		return null;
 	}
@@ -103,8 +103,8 @@ console.log("🚀 Initiating build and publish process...");
 // Choose proper command based on scoped package vs unscoped package
 const isScoped = packageName.startsWith("@");
 const publishCommand = isScoped
-	? "pnpm publish --access public --no-git-checks"
-	: "pnpm publish --no-git-checks";
+	? "npm publish --access public"
+	: "npm publish";
 
 const publishSuccess = runCommand(publishCommand);
 
