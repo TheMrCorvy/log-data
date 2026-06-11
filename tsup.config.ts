@@ -6,4 +6,10 @@ export default defineConfig({
 	dts: true,
 	clean: true,
 	sourcemap: true,
+	outExtension({ format }) {
+		if (format === "esm") {
+			return { js: ".mjs", dts: ".d.mts" };
+		}
+		return { js: ".js", dts: ".d.ts" };
+	},
 });
