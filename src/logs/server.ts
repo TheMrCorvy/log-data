@@ -14,6 +14,12 @@ interface LogsForServerParams extends LogDataParams {
 
 type LogsForServer = (params: LogsForServerParams) => void;
 
+interface LogDataPayload {
+	app: string;
+	payload: unknown;
+	timestamp?: string;
+}
+
 const loggerCache = new Map<string, pino.Logger>();
 
 const getLogger = (appName: string): pino.Logger => {
@@ -67,9 +73,14 @@ const logsForServer: LogsForServer = ({
 		logSpace(pinoLogger, true);
 	}
 
-	const payload = data
-		? { app: appName, payload: data }
-		: { app: appName, payload: undefined };
+	const payload: LogDataPayload = {
+		app: appName,
+		payload: data ?? undefined,
+	};
+
+	if (timeStamp) {
+		payload.timestamp = printTimeStamp();
+	}
 
 	switch (type) {
 		case "error":
@@ -87,12 +98,6 @@ const logsForServer: LogsForServer = ({
 		default:
 			pinoLogger.info(payload, logLabel);
 			break;
-	}
-
-	if (timeStamp) {
-		logSpace(pinoLogger, addSpaceAfter);
-		pinoLogger.info(printTimeStamp());
-		logSpace(pinoLogger, addSpaceAfter);
 	}
 
 	if (addSeparatorAfter) {
