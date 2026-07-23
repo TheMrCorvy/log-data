@@ -72,13 +72,14 @@ export const logData: LogData = ({
 	}
 
 	const appName = getEnv("APP_NAME") || "Unknown App";
+	const useConsole = getEnv("USE_CONSOLE") === "true" ? true : false;
 	const separator =
 		"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
 	const isServer = typeof window === "undefined";
 
 	const logLabel = title ? `${title}${data ? ": " : ""}` : "Debug log: ";
 
-	if (isServer) {
+	if (isServer && !useConsole) {
 		return logsForServer({
 			data,
 			type,
