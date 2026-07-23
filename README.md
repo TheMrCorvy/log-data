@@ -38,6 +38,16 @@ This variable should be and absolute path from the root directory to the folder 
 
 If this folder doesn't exists, then logData function will create it during the first execution.
 
+### 4. Use console
+
+Set the env var USE_CONSOLE = true || "true" in order to tell the package that you want to see the logs in the terminal rather than in the logs file.
+
+This feature is going to be very useful while developing ;) By default is set to false, making it send the logs to pino, but you can set it up by adding this in your .env file:
+
+```env
+USE_CONSOLE=true
+```
+
 ---
 
 ## Usage & API

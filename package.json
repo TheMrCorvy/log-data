@@ -1,6 +1,6 @@
 {
 	"name": "@salvatore.hakase/log-data",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "An environment-aware logging library for client and server (using Pino on server and Console on client).",
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",
